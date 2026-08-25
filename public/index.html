@@ -1,40 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NexusChat</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#07070e;--bg2:#0e0e1a;--bg3:#161625;--bg4:#1e1e32;
-  --glass:rgba(255,255,255,.04);--glass2:rgba(255,255,255,.07);--glass3:rgba(255,255,255,.1);
-  --fg:#f0eef5;--fg2:rgba(240,238,245,.55);--fg3:rgba(240,238,245,.25);
-  --g1:#a78bfa;--g2:#f472b6;--g3:#22d3ee;--g4:#34d399;
-  --g5:#fbbf24;--g6:#fb923c;--g7:#f87171;--g8:#818cf8;
-  --grad1:linear-gradient(135deg,#a78bfa,#f472b6);
-  --grad2:linear-gradient(135deg,#22d3ee,#34d399);
-  --grad3:linear-gradient(135deg,#fbbf24,#fb923c);
-  --grad4:linear-gradient(135deg,#818cf8,#a78bfa);
-  --brd:rgba(255,255,255,.06);
-  --shd:0 8px 32px rgba(0,0,0,.4);
-  --tr:.25s cubic-bezier(.4,0,.2,1)
-}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);height:100vh;height:100dvh;overflow:hidden;-webkit-tap-highlight-color:transparent}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07040f" />
+<title>VYBE PULSE — anonymous chat</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>" />
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i></div>
 
-/* ── Animated BG ── */
-.bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.18;animation:blobMove 20s ease-in-out infinite alternate}
-.blob:nth-child(1){width:500px;height:500px;background:var(--g1);top:-10%;left:-10%;animation-delay:0s}
-.blob:nth-child(2){width:400px;height:400px;background:var(--g2);bottom:-10%;right:-10%;animation-delay:-5s;animation-duration:25s}
-.blob:nth-child(3){width:300px;height:300px;background:var(--g3);top:50%;left:50%;animation-delay:-10s;animation-duration:18s}
-@keyframes blobMove{0%{transform:translate(0,0) scale(1)}33%{transform:translate(80px,-60px) scale(1.1)}66%{transform:translate(-40px,80px) scale(.9)}100%{transform:translate(60px,40px) scale(1.05)}}
+<div id="gate" class="gate">
+  <div class="card">
+    <div class="logo">VYBE<span>PULSE</span></div>
+    <p class="tag">no signup · ghost IDs · squad codes · random</p>
+    <ul>
+      <li>You must be <b>13+</b>. 18+ is safer for random chat.</li>
+      <li>Never share name, school, address, socials, or photos.</li>
+      <li>No hate, harassment, sexual content involving minors, or spam.</li>
+      <li>Report + leave if someone is creepy. Chats are memory-only.</li>
+    </ul>
+    <label><input type="checkbox" id="agree" /> I’m 13+ and I agree</label>
+    <button id="enter" class="btn pink" disabled>enter pulse →</button>
+  </div>
+</div>
 
-/* ── Landing ── */
-.landing{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;padding:20px;transition:opacity .5s,transform .5s}
+<div id="app" class="app hide">
+  <header>
+    <div class="brand" data-go="home"><b></b> VYBE</div>
+    <div class="pills">
+      <span><strong id="nOnline">0</strong> online</span>
+      <span class="desk"><strong id="nChat">0</strong> random</span>
+    </div>
+    <button class="ghost" id="meBtn"><span id="topAv">👻</span><em id="topNick">...</em></button>
+  </header>
+
+  <section id="home" class="view show">
+    <h1>stay a ghost.<br><span>talk anyway.</span></h1>
+    <p>share a Ghost ID with friends, drop a squad code, or hit random.</p>
+    <div class="actions">
+      <button class="tile" data-go="friends"><i>🔒</i><b>Friends</b><small>ID or squad code</small></button>
+      <button class="tile" data-go="random"><i>🎲</i><b>Random</b><small>stranger 1-on-1</small></button>
+      <button class="tile" data-go="rooms"><i>💬</i><b>Rooms</b><small>public topics</small></button>
+    </div>
+    <h3>public rooms</h3>
+    <div id="roomGrid" class="grid"></div>
+  </section>
+
+  <section id="rooms" class="view">
+    <div class="bar"><button class="ghost" data-go="home">←</button><div><b>Rooms</b><small>public, no invite needed</small></div></div>
+    <div id="roomGrid2" class="grid pad"></div>
+  </section>
+
+  <section id="roomChat" class="view chat">
+    <div class="bar">
+      <button class="ghost" id="leaveRoom">←</button>
+      <div><b id="roomName">Room</b><small id="roomSub">0 here</small></div>
+      <button class="ghost" data-report="room">⚑</button>
+    </div>
+    <div id="roomMsgs" class="msgs"></div>
+    <div id="roomType" class="type"></div>
+    <form id="roomForm" class="comp"><button type="button" class="emo" data-in="roomIn">☺</button><input id="roomIn" maxlength="400" placeholder="say something" /><button class="go">➤</button></form>
+  </section>
+
+  <section id="friends" class="view">
+    <div class="bar"><button class="ghost" data-go="home">←</button><div><b>Friends</b><small>ID · squad · invite</small></div></div>
+    <div class="stack">
+      <article>
+        <h4>your ghost id</h4>
+        <div class="row"><code id="myId">-----</code><button class="btn sm" id="copyId">copy</button></div>
+        <small class="hint">they paste this while you are online</small>
+      </article>
+      <article>
+        <h4>chat a friend by id</h4>
+        <form id="dmForm" class="row"><input id="dmId" maxlength="8" placeholder="K8M2P" /><button class="btn pink sm">open</button></form>
+        <div id="lookupBox" class="hint"></div>
+      </article>
+      <article>
+        <h4>squad room</h4>
+        <button class="btn pink" id="makeSquad">create squad code</button>
+        <form id="squadForm" class="row"><input id="squadIn" maxlength="8" placeholder="enter code" /><button class="btn sm">join</button></form>
+        <div id="recent" class="chips"></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="squadChat" class="view chat">
+    <div class="bar">
+      <button class="ghost" id="leaveSquad">←</button>
+      <div><b id="squadName">Squad</b><small id="squadSub">private</small></div>
+      <button class="ghost" id="shareSquad">🔗</button>
+    </div>
+    <div id="squadPeople" class="people"></div>
+    <div id="squadMsgs" class="msgs"></div>
+    <div id="squadType" class="type"></div>
+    <form id="squadMsgForm" class="comp"><button type="button" class="emo" data-in="squadMsgIn">☺</button><input id="squadMsgIn" maxlength="400" placeholder="squad chat" /><button class="go">➤</button></form>
+  </section>
+
+  <section id="dmChat" class="view chat">
+    <div class="bar">
+      <button class="ghost" id="leaveDm">←</button>
+      <div><b id="dmName">DM</b><small id="dmSub">direct</small></div>
+      <button class="ghost" data-report="dm">⚑</button>
+    </div>
+    <div id="dmMsgs" class="msgs"></div>
+    <div id="dmType" class="type"></div>
+    <form id="dmMsgForm" class="comp"><button type="button" class="emo" data-in="dmMsgIn">☺</button><input id="dmMsgIn" maxlength="400" placeholder="message" /><button class="go">➤</button></form>
+  </section>
+
+  <section id="random" class="view chat">
+    <div class="bar">
+      <button class="ghost" id="leaveRandom">←</button>
+      <div><b id="ranName">Random</b><small id="ranSub">not connected</small></div>
+      <span><button class="ghost" id="blockBtn">🚫</button><button class="ghost" data-report="random">⚑</button></span>
+    </div>
+    <div id="ranMsgs" class="msgs">
+      <div class="empty" id="ranEmpty">
+        <div class="dice">🎲</div>
+        <h3>random roulette</h3>
+        <p>match a stranger. pick interests first.</p>
+        <div id="chips" class="chips"></div>
+        <button class="btn pink" id="findBtn">find someone</button>
+      </div>
+    </div>
+    <div id="ranType" class="type"></div>
+    <div id="ranBar" class="rbar hide"><button id="nextBtn">next</button><button id="stopBtn" class="danger">stop</button></div>
+    <form id="ranForm" class="comp hide"><button type="button" class="emo" data-in="ranIn">☺</button><input id="ranIn" maxlength="400" placeholder="say hi" /><button class="go">➤</button></form>
+  </section>
+</div>
+
+<nav>
+  <button data-go="home">🏠<span>home</span></button>
+  <button data-go="friends">🔒<span>friends</span></button>
+  <button data-go="random">🎲<span>random</span></button>
+  <button id="navMe">👤<span>me</span></button>
+</nav>
+
+<div id="sheet" class="sheet hide">
+  <div class="sheet-card">
+    <div class="grab"></div>
+    <h3>ghost identity</h3>
+    <div class="me"><div class="av" id="prevAv">👻</div><div><b id="prevNick">...</b><code id="prevId">-----</code></div></div>
+    <label>nickname</label><input id="nickIn" maxlength="16" />
+    <label>avatar</label><div id="avs" class="avs"></div>
+    <label>interests</label><input id="intIn" placeholder="music, gaming, anime" />
+    <div class="row"><button class="btn" id="reroll">reroll</button><button class="btn pink" id="saveMe">save</button></div>
+  </div>
+</div>
+
+<div id="modal" class="sheet hide">
+  <div class="sheet-card">
+    <div class="grab"></div>
+    <h3 id="modalTitle">invite</h3>
+    <p id="modalText" class="hint"></p>
+    <div class="row"><code id="modalCode"></code><button class="btn sm" id="modalCopy">copy</button></div>
+    <button class="btn" id="modalClose">close</button>
+  </div>
+</div>
+
+<div id="incoming" class="sheet hide">
+  <div class="sheet-card">
+    <h3>incoming DM</h3>
+    <p id="incText" class="hint"></p>
+    <div class="row"><button class="btn pink" id="incYes">open</button><button class="btn" id="incNo">ignore</button></div>
+  </div>
+</div>
+
+<div id="emoPop" class="emo-pop hide"></div>
+<div id="toast" class="toast hide"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>.landing{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;padding:20px;transition:opacity .5s,transform .5s}
 .landing.gone{opacity:0;transform:scale(.95);pointer-events:none}
 .l-card{width:100%;max-width:420px;position:relative}
 .l-card-inner{background:var(--glass);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--brd);border-radius:28px;padding:40px 32px;position:relative;overflow:hidden}
